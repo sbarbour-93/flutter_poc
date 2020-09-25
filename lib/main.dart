@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -6,8 +7,9 @@ import 'package:http/http.dart' as http;
 void main() => runApp(MyApp());
 
 Future<List<Album>> fetchAlbums() async {
+  var randomNumberBetweenOneAndTen = Random().nextInt(10) + 1;
   final response =
-      await http.get('https://jsonplaceholder.typicode.com/albums/');
+      await http.get('https://jsonplaceholder.typicode.com/albums/$randomNumberBetweenOneAndTen/photos');
 
   if (response.statusCode == 200) {
     var jsonAsList = json.decode(response.body) as List;
@@ -21,14 +23,18 @@ class Album {
   final int userId;
   final int id;
   final String title;
+  final String url;
+  final String thumbnailUrl;
 
-  Album({this.userId, this.id, this.title});
+  Album({this.userId, this.id, this.title, this.url, this.thumbnailUrl});
 
   factory Album.fromJson(Map<String, dynamic> json) {
     return Album(
       userId: json['userId'],
       id: json['id'],
       title: json['title'],
+      url: json['url'],
+      thumbnailUrl: json['thumbnailUrl'],
     );
   }
 }
@@ -117,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 return GridView.count(
                   crossAxisCount: 2,
                   children: _getListData(snapshot.data),
-                  padding: EdgeInsets.fromLTRB(5, 10, 5, 20),
+                  // padding: EdgeInsets.fromLTRB(5, 10, 5, 20),
                 );
               } else if (snapshot.hasError) {
                 return Text("${snapshot.error}");
@@ -135,12 +141,25 @@ class _MyHomePageState extends State<MyHomePage> {
     List<Widget> cards = [];
 
     albums.forEach((element) {
-      cards.add(Card(
-        child: Padding(
-          padding: EdgeInsets.all(10.0),
-          child: Text(element.title),
+      cards.add(
+        Card(
+          child: Column(children: [
+            Expanded(
+              flex: 6,
+              child: Image.network(
+                element.url,
+              ),
+            ),
+            Expanded(
+                flex: 4,
+                child: Padding(
+                    padding: EdgeInsets.all(10), child: Text(
+                    element.title,
+                  textAlign: TextAlign.center,
+                )))
+          ]),
         ),
-      ));
+      );
     });
 
     return cards;
